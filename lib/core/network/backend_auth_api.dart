@@ -10,11 +10,15 @@ class BackendAuthApi {
   static Uri _uri(String path) => Uri.parse('${EnvConfig.backendBaseUrl}$path');
 
   /// Returns the OTP if the backend includes it (dev only). Otherwise null.
-  static Future<String?> requestOtp({required String email}) async {
+  /// Optionally pass a role when creating a new user ("student"|"employer").
+  static Future<String?> requestOtp({required String email, String? role}) async {
     final res = await http.post(
       _uri('/api/auth/request-otp'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': email}),
+      body: jsonEncode({
+        'email': email,
+        if (role != null && role.trim().isNotEmpty) 'role': role.trim(),
+      }),
     );
     if (res.statusCode < 200 || res.statusCode >= 300) {
       throw Exception(_extractError(res.body) ?? 'Failed to request OTP.');

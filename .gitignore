@@ -3,6 +3,7 @@
 .packages
 build/
 *.iml
+.flutter-plugins-dependencies
 
 # Node / backend
 backend/node_modules/

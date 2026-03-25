@@ -5,6 +5,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/network/backend_auth_api.dart';
 import '../../../../core/router/app_router.dart' as router;
 import '../../../../shared/theme/app_colors.dart';
+import '../../domain/entities/user_role.dart';
 import '../widgets/auth_text_field.dart';
 
 /// Create account uses the same OTP flow as login: email → send code → verify.
@@ -20,6 +21,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final _emailController = TextEditingController();
   bool _loading = false;
   String? _message;
+  UserRole _role = UserRole.student;
 
   @override
   void dispose() {
@@ -35,7 +37,10 @@ class _RegisterPageState extends State<RegisterPage> {
     });
     final email = _emailController.text.trim();
     try {
-      final otp = await BackendAuthApi.requestOtp(email: email);
+      final otp = await BackendAuthApi.requestOtp(
+        email: email,
+        role: _role.name,
+      );
       if (!mounted) return;
       final query = Uri(queryParameters: {'email': email, if (otp != null) 'otp': otp}).query;
       context.go('${router.AppRouter.verifyOtp}?$query');
@@ -84,6 +89,22 @@ class _RegisterPageState extends State<RegisterPage> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
+                Text(
+                  'I am a…',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 8),
+                SegmentedButton<UserRole>(
+                  segments: const [
+                    ButtonSegment(value: UserRole.student, label: Text('Student'), icon: Icon(Icons.school_rounded)),
+                    ButtonSegment(value: UserRole.employer, label: Text('Employer'), icon: Icon(Icons.business_center_rounded)),
+                  ],
+                  selected: {_role},
+                  onSelectionChanged: (set) {
+                    setState(() => _role = set.first);
+                  },
+                ),
+                const SizedBox(height: 16),
                 AuthTextField(
                   controller: _emailController,
                   label: 'Email',
