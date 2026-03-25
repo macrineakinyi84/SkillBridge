@@ -1,0 +1,98 @@
+// SkillBridge backend — PostgreSQL. Run: npx prisma migrate dev
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  student
+  employer
+  admin
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  role      UserRole @default(student)
+  isVerified Boolean @default(false)
+  createdAt DateTime @default(now())
+  displayName String?
+  county    String?
+  photoUrl  String?
+  // Gamification profile (denormalised for quick read)
+  totalXp   Int      @default(0)
+  weeklyXp  Int      @default(0)
+  level     Int      @default(1)
+  levelName String?
+  jobStreak Int      @default(0)
+  learnStreak Int    @default(0)
+  lastJobStreakAt  DateTime?
+  lastLearnStreakAt DateTime?
+
+  skillScores SkillScore[]
+  assessments Assessment[]
+  xpEvents    XpEvent[]
+  userBadges  UserBadge[]
+}
+
+model OtpToken {
+  id        String   @id @default(uuid())
+  email     String
+  otpHash   String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}
+
+model SkillScore {
+  userId      String
+  categoryId  String
+  currentScore Int
+  updatedAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@id([userId, categoryId])
+}
+
+model Assessment {
+  id              String   @id @default(uuid())
+  userId          String
+  categoryId      String
+  normalisedScore Int
+  rawScore        Int
+  maxPossibleScore Int
+  tier            String
+  createdAt       DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, categoryId])
+}
+
+model XpEvent {
+  id        String   @id @default(uuid())
+  userId    String
+  eventType String
+  xpAwarded Int
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId])
+}
+
+model UserBadge {
+  id      String   @id @default(uuid())
+  userId  String
+  badgeId String
+  earnedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([userId, badgeId])
+  @@index([userId])
+}

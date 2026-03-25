@@ -1,0 +1,41 @@
+# Flutter
+.dart_tool/
+.packages
+build/
+*.iml
+
+# Node / backend
+backend/node_modules/
+backend/.env
+backend/.env.*
+backend/npm-debug.log*
+backend/yarn-debug.log*
+backend/yarn-error.log*
+
+# Local logs
+*.log
+
+# Android
+android/.gradle/
+android/local.properties
+android/**/google-services.json
+
+# iOS
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Flutter.framework
+ios/**/GoogleService-Info.plist
+
+# IDE
+.idea/
+*.iml
+
+# Env
+.env
+.env.*
+
+# Generated
+*.g.dart
+*.freezed.dart
+
+flutter/
