@@ -47,33 +47,33 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyDuDp5D1_EdO0fZXI2IJ3MR6vgzlOrweDs',
-    appId: '1:256604439774:ios:779305d6b6e2494823ae4f',
-    messagingSenderId: '256604439774',
-    projectId: 'skillbridge-bc0e5',
-    storageBucket: 'skillbridge-bc0e5.firebasestorage.app',
-    iosClientId: '256604439774-8lh2rsl7ishagkgkel76ico2579f2vkm.apps.googleusercontent.com',
+    apiKey: 'REPLACE_ME_FIREBASE_API_KEY',
+    appId: 'REPLACE_ME_FIREBASE_APP_ID',
+    messagingSenderId: 'REPLACE_ME_FIREBASE_SENDER_ID',
+    projectId: 'REPLACE_ME_FIREBASE_PROJECT_ID',
+    storageBucket: 'REPLACE_ME_FIREBASE_STORAGE_BUCKET',
+    iosClientId: 'REPLACE_ME_FIREBASE_IOS_CLIENT_ID',
     iosBundleId: 'com.skillbridge.skillbridge',
   );
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyAKEWYiDme1S4iN8-zTvVKQGtx2Z2Bgmi0',
-    appId: '1:256604439774:web:f2978ab8e2d6da5823ae4f',
-    messagingSenderId: '256604439774',
-    projectId: 'skillbridge-bc0e5',
-    authDomain: 'skillbridge-bc0e5.firebaseapp.com',
-    storageBucket: 'skillbridge-bc0e5.firebasestorage.app',
-    measurementId: 'G-3QT82179RW',
+    apiKey: 'REPLACE_ME_FIREBASE_API_KEY',
+    appId: 'REPLACE_ME_FIREBASE_APP_ID',
+    messagingSenderId: 'REPLACE_ME_FIREBASE_SENDER_ID',
+    projectId: 'REPLACE_ME_FIREBASE_PROJECT_ID',
+    authDomain: 'REPLACE_ME_FIREBASE_AUTH_DOMAIN',
+    storageBucket: 'REPLACE_ME_FIREBASE_STORAGE_BUCKET',
+    measurementId: 'REPLACE_ME_FIREBASE_MEASUREMENT_ID',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyAKEWYiDme1S4iN8-zTvVKQGtx2Z2Bgmi0',
-    appId: '1:256604439774:web:f2978ab8e2d6da5823ae4f',
-    messagingSenderId: '256604439774',
-    projectId: 'skillbridge-bc0e5',
-    authDomain: 'skillbridge-bc0e5.firebaseapp.com',
-    storageBucket: 'skillbridge-bc0e5.firebasestorage.app',
-    measurementId: 'G-3QT82179RW',
+    apiKey: 'REPLACE_ME_FIREBASE_API_KEY',
+    appId: 'REPLACE_ME_FIREBASE_APP_ID',
+    messagingSenderId: 'REPLACE_ME_FIREBASE_SENDER_ID',
+    projectId: 'REPLACE_ME_FIREBASE_PROJECT_ID',
+    authDomain: 'REPLACE_ME_FIREBASE_AUTH_DOMAIN',
+    storageBucket: 'REPLACE_ME_FIREBASE_STORAGE_BUCKET',
+    measurementId: 'REPLACE_ME_FIREBASE_MEASUREMENT_ID',
   );
 
 }
