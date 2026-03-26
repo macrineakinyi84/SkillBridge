@@ -45,7 +45,15 @@ class SkillsCategoriesPage extends StatelessWidget {
                   borderRadius: AppRadius.radiusL,
                   child: InkWell(
                     borderRadius: AppRadius.radiusL,
-                    onTap: () => context.push('${router.AppRouter.skills}/assess/${c.title.toLowerCase().replaceAll(' ', '-')}'),
+                    onTap: () {
+                      final categoryId = c.title
+                          .toLowerCase()
+                          .replaceAll(' & ', '-')
+                          .replaceAll('(', '')
+                          .replaceAll(')', '')
+                          .replaceAll(' ', '-');
+                      context.push(router.AppRouter.assessmentQuizFor(categoryId));
+                    },
                     child: Padding(
                       padding: const EdgeInsets.all(AppSpacing.m),
                       child: Row(

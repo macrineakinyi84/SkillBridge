@@ -10,6 +10,8 @@ import 'package:share_plus/share_plus.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/network/backend_api_client.dart';
 import '../../../../core/router/app_router.dart' as router;
+import '../../../student_data/data/repositories/student_portfolio_repository.dart';
+import '../../../student_data/domain/models/portfolio_models.dart';
 import '../../../../shared/theme/app_colors.dart';
 import '../../../../shared/theme/app_radius.dart';
 import '../../../../shared/theme/app_spacing.dart';
@@ -25,6 +27,7 @@ class PortfolioScreen extends StatefulWidget {
 
 class _PortfolioScreenState extends State<PortfolioScreen> with SingleTickerProviderStateMixin {
   late final TabController _tabController;
+  final StudentPortfolioRepository _repo = sl<StudentPortfolioRepository>();
 
   final List<_ExperienceEntry> _experience = [];
   final List<_EducationEntry> _education = [];
@@ -40,6 +43,30 @@ class _PortfolioScreenState extends State<PortfolioScreen> with SingleTickerProv
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    _loadFromRepo();
+  }
+
+  void _loadFromRepo() {
+    final profile = _repo.getProfile();
+    if (profile != null) {
+      _name = profile.displayName;
+      _headline = profile.headline;
+    }
+    _experience
+      ..clear()
+      ..addAll(_repo.listExperience().map((e) => _ExperienceEntry(role: e.role, company: e.company, period: e.period, summary: e.summary)));
+    _education
+      ..clear()
+      ..addAll(_repo.listEducation().map((e) => _EducationEntry(degree: e.degree, institution: e.institution, period: e.period, summary: e.summary)));
+    _projects
+      ..clear()
+      ..addAll(_repo.listProjects().map((p) => _ProjectEntry(title: p.title, description: p.description, url: p.url, screenshotPath: p.screenshotPath)));
+    _certs
+      ..clear()
+      ..addAll(_repo.listCertifications().map((c) => _CertificationEntry(name: c.name, issuer: c.issuer, date: c.date)));
+
+    final total = _experience.length + _education.length + _projects.length + _certs.length;
+    _completeness = total <= 0 ? 0.35 : (0.55 + (total / 20.0) * 0.45).clamp(0.35, 0.95);
   }
 
   @override
@@ -104,7 +131,12 @@ class _PortfolioScreenState extends State<PortfolioScreen> with SingleTickerProv
                     description: item.summary,
                   ),
                   onEditAt: (index) => _openExperienceSheet(existing: _experience[index], index: index),
-                  onDeleteAt: (index) => setState(() => _experience.removeAt(index)),
+                  onDeleteAt: (index) async {
+                    final id = _repo.listExperience().elementAt(index).id;
+                    await _repo.deleteExperience(id);
+                    if (!mounted) return;
+                    setState(_loadFromRepo);
+                  },
                 ),
                 _buildListTab<_EducationEntry>(
                   context,
@@ -119,7 +151,12 @@ class _PortfolioScreenState extends State<PortfolioScreen> with SingleTickerProv
                     description: item.summary,
                   ),
                   onEditAt: (index) => _openEducationSheet(existing: _education[index], index: index),
-                  onDeleteAt: (index) => setState(() => _education.removeAt(index)),
+                  onDeleteAt: (index) async {
+                    final id = _repo.listEducation().elementAt(index).id;
+                    await _repo.deleteEducation(id);
+                    if (!mounted) return;
+                    setState(_loadFromRepo);
+                  },
                 ),
                 _buildListTab<_ProjectEntry>(
                   context,
@@ -134,7 +171,12 @@ class _PortfolioScreenState extends State<PortfolioScreen> with SingleTickerProv
                     description: item.description,
                   ),
                   onEditAt: (index) => _openProjectSheet(existing: _projects[index], index: index),
-                  onDeleteAt: (index) => setState(() => _projects.removeAt(index)),
+                  onDeleteAt: (index) async {
+                    final id = _repo.listProjects().elementAt(index).id;
+                    await _repo.deleteProject(id);
+                    if (!mounted) return;
+                    setState(_loadFromRepo);
+                  },
                 ),
                 _buildListTab<_CertificationEntry>(
                   context,
@@ -149,7 +191,12 @@ class _PortfolioScreenState extends State<PortfolioScreen> with SingleTickerProv
                     description: item.date,
                   ),
                   onEditAt: (index) => _openCertificationSheet(existing: _certs[index], index: index),
-                  onDeleteAt: (index) => setState(() => _certs.removeAt(index)),
+                  onDeleteAt: (index) async {
+                    final id = _repo.listCertifications().elementAt(index).id;
+                    await _repo.deleteCertification(id);
+                    if (!mounted) return;
+                    setState(_loadFromRepo);
+                  },
                 ),
               ],
             ),
@@ -487,13 +534,29 @@ class _PortfolioScreenState extends State<PortfolioScreen> with SingleTickerProv
       ),
     );
     if (result == null) return;
-    setState(() {
-      if (index != null) {
-        _experience[index] = result;
-      } else {
-        _experience.add(result);
-      }
-    });
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (index != null) {
+      final id = _repo.listExperience().elementAt(index).id;
+      await _repo.upsertExperience(
+        PortfolioExperience(
+          id: id,
+          role: result.role,
+          company: result.company,
+          period: result.period,
+          summary: result.summary,
+          updatedAtMs: now,
+        ),
+      );
+    } else {
+      await _repo.createExperience(
+        role: result.role,
+        company: result.company,
+        period: result.period,
+        summary: result.summary,
+      );
+    }
+    if (!mounted) return;
+    setState(_loadFromRepo);
   }
 
   Future<void> _openEducationSheet({_EducationEntry? existing, int? index}) async {
@@ -505,13 +568,29 @@ class _PortfolioScreenState extends State<PortfolioScreen> with SingleTickerProv
       ),
     );
     if (result == null) return;
-    setState(() {
-      if (index != null) {
-        _education[index] = result;
-      } else {
-        _education.add(result);
-      }
-    });
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (index != null) {
+      final id = _repo.listEducation().elementAt(index).id;
+      await _repo.upsertEducation(
+        PortfolioEducation(
+          id: id,
+          degree: result.degree,
+          institution: result.institution,
+          period: result.period,
+          summary: result.summary,
+          updatedAtMs: now,
+        ),
+      );
+    } else {
+      await _repo.createEducation(
+        degree: result.degree,
+        institution: result.institution,
+        period: result.period,
+        summary: result.summary,
+      );
+    }
+    if (!mounted) return;
+    setState(_loadFromRepo);
   }
 
   Future<void> _openProjectSheet({_ProjectEntry? existing, int? index}) async {
@@ -523,13 +602,29 @@ class _PortfolioScreenState extends State<PortfolioScreen> with SingleTickerProv
       ),
     );
     if (result == null) return;
-    setState(() {
-      if (index != null) {
-        _projects[index] = result;
-      } else {
-        _projects.add(result);
-      }
-    });
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (index != null) {
+      final id = _repo.listProjects().elementAt(index).id;
+      await _repo.upsertProject(
+        PortfolioProject(
+          id: id,
+          title: result.title,
+          description: result.description,
+          url: result.url,
+          screenshotPath: result.screenshotPath,
+          updatedAtMs: now,
+        ),
+      );
+    } else {
+      await _repo.createProject(
+        title: result.title,
+        description: result.description,
+        url: result.url,
+        screenshotPath: result.screenshotPath,
+      );
+    }
+    if (!mounted) return;
+    setState(_loadFromRepo);
   }
 
   Future<void> _openCertificationSheet({_CertificationEntry? existing, int? index}) async {
@@ -541,13 +636,27 @@ class _PortfolioScreenState extends State<PortfolioScreen> with SingleTickerProv
       ),
     );
     if (result == null) return;
-    setState(() {
-      if (index != null) {
-        _certs[index] = result;
-      } else {
-        _certs.add(result);
-      }
-    });
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (index != null) {
+      final id = _repo.listCertifications().elementAt(index).id;
+      await _repo.upsertCertification(
+        PortfolioCertification(
+          id: id,
+          name: result.name,
+          issuer: result.issuer,
+          date: result.date,
+          updatedAtMs: now,
+        ),
+      );
+    } else {
+      await _repo.createCertification(
+        name: result.name,
+        issuer: result.issuer,
+        date: result.date,
+      );
+    }
+    if (!mounted) return;
+    setState(_loadFromRepo);
   }
 
   Future<T?> _showEntrySheet<T>({
@@ -587,11 +696,14 @@ class _PortfolioScreenState extends State<PortfolioScreen> with SingleTickerProv
                   ),
                   const Divider(height: 1),
                   Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.m),
-                      child: builder(
-                        context,
-                        (value) => Navigator.of(context).pop(value),
+                    child: SafeArea(
+                      top: false,
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(AppSpacing.m),
+                        child: builder(
+                          context,
+                          (value) => Navigator.of(context).pop(value),
+                        ),
                       ),
                     ),
                   ),
@@ -741,6 +853,7 @@ class _ExperienceFormState extends State<_ExperienceForm> {
   @override
   Widget build(BuildContext context) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         TextField(
           controller: _role,
@@ -760,7 +873,7 @@ class _ExperienceFormState extends State<_ExperienceForm> {
           maxLines: 3,
           decoration: const InputDecoration(labelText: 'What did you do?'),
         ),
-        const Spacer(),
+        const SizedBox(height: AppSpacing.l),
         SizedBox(
           width: double.infinity,
           child: FilledButton(
@@ -823,6 +936,7 @@ class _EducationFormState extends State<_EducationForm> {
   @override
   Widget build(BuildContext context) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         TextField(
           controller: _degree,
@@ -841,7 +955,7 @@ class _EducationFormState extends State<_EducationForm> {
           maxLines: 3,
           decoration: const InputDecoration(labelText: 'Details (optional)'),
         ),
-        const Spacer(),
+        const SizedBox(height: AppSpacing.l),
         SizedBox(
           width: double.infinity,
           child: FilledButton(
@@ -912,6 +1026,7 @@ class _ProjectFormState extends State<_ProjectForm> {
   @override
   Widget build(BuildContext context) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         TextField(
           controller: _title,
@@ -936,7 +1051,7 @@ class _ProjectFormState extends State<_ProjectForm> {
             label: Text(_screenshotPath == null ? 'Add screenshot' : 'Change screenshot'),
           ),
         ),
-        const Spacer(),
+        const SizedBox(height: AppSpacing.l),
         SizedBox(
           width: double.infinity,
           child: FilledButton(
@@ -996,6 +1111,7 @@ class _CertificationFormState extends State<_CertificationForm> {
   @override
   Widget build(BuildContext context) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         TextField(
           controller: _name,
@@ -1009,7 +1125,7 @@ class _CertificationFormState extends State<_CertificationForm> {
           controller: _date,
           decoration: const InputDecoration(labelText: 'Date (optional)'),
         ),
-        const Spacer(),
+        const SizedBox(height: AppSpacing.l),
         SizedBox(
           width: double.infinity,
           child: FilledButton(

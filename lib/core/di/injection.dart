@@ -15,6 +15,7 @@ import '../../features/readiness/domain/models/readiness_score_config.dart';
 import '../../features/readiness/domain/services/readiness_score_calculator.dart';
 import '../../features/readiness/domain/usecases/calculate_readiness_score.dart';
 import '../../features/employer/data/datasources/employer_remote_datasource.dart';
+import '../../features/employer/data/datasources/employer_remote_datasource_hybrid.dart';
 import '../../features/employer/domain/repositories/employer_repository.dart';
 import '../../features/employer/data/repositories/employer_repository_impl.dart';
 import '../../features/gamification/data/datasources/gamification_remote_datasource.dart';
@@ -32,6 +33,9 @@ import '../../features/community/data/repositories/community_repository_impl.dar
 import '../../features/notifications/data/datasources/notification_local_datasource.dart';
 import '../../features/notifications/domain/repositories/notification_repository.dart';
 import '../../features/notifications/data/repositories/notification_repository_impl.dart';
+import '../../features/student_data/data/repositories/student_portfolio_repository.dart';
+import '../../features/student_data/data/repositories/student_skills_repository.dart';
+import '../seed/seed_service.dart';
 
 final GetIt sl = GetIt.instance;
 
@@ -64,8 +68,11 @@ Future<void> setupServiceLocator({bool useFirebase = true}) async {
   );
   sl.registerLazySingleton(() => CalculateReadinessScore(sl()));
 
-  // Employer dashboard, listings, candidates; mock datasource until backend is ready (see employer/data/datasources).
-  sl.registerLazySingleton<EmployerRemoteDataSource>(() => EmployerRemoteDataSourceMock());
+  // Employer: backend-first with safe fallback to mock for unimplemented endpoints/offline.
+  sl.registerLazySingleton<EmployerRemoteDataSource>(() => EmployerRemoteDataSourceHybrid(
+        backend: EmployerRemoteDataSourceBackend(),
+        fallback: EmployerRemoteDataSourceMock(),
+      ));
   sl.registerLazySingleton<EmployerRepository>(() => EmployerRepositoryImpl(sl()));
 
   // Gamification: XP, badges, streaks, career health; mock until backend (see gamification/data/datasources).
@@ -91,4 +98,11 @@ Future<void> setupServiceLocator({bool useFirebase = true}) async {
   // Notifications: center + FCM; local mock until backend (see notifications/data/datasources).
   sl.registerLazySingleton<NotificationLocalDataSource>(() => NotificationLocalDataSourceMock());
   sl.registerLazySingleton<NotificationRepository>(() => NotificationRepositoryImpl(sl()));
+
+  // Student local persistence (Hive-backed).
+  sl.registerLazySingleton(() => StudentSkillsRepository());
+  sl.registerLazySingleton(() => StudentPortfolioRepository());
+
+  // One-time seeding (Kenyan-realistic). Safe to call on every startup.
+  sl.registerLazySingleton(() => SeedService(skillsRepo: sl(), portfolioRepo: sl()));
 }

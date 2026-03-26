@@ -36,9 +36,10 @@ class _DashboardPageState extends State<DashboardPage> {
         SkillProgressItem(name: 'Dart', proficiencyLevel: 'Intermediate', progressPercent: 70),
         SkillProgressItem(name: 'Firebase', proficiencyLevel: 'Intermediate', progressPercent: 60),
         SkillProgressItem(name: 'Clean Architecture', proficiencyLevel: 'Beginner', progressPercent: 40),
+        SkillProgressItem(name: 'REST APIs', proficiencyLevel: 'Intermediate', progressPercent: 58),
       ],
       recommendedSkills: ['Riverpod', 'CI/CD', 'REST APIs', 'Testing', 'UI/UX'],
-      portfolioCount: 3,
+      portfolioCount: 5,
       activeDaysThisWeek: 3,
       nextStepTitle: 'Your next step',
       nextStepBody: 'Add 1 more skill to reach 80% readiness.',
@@ -47,10 +48,16 @@ class _DashboardPageState extends State<DashboardPage> {
       recentJobMatches: [
         RecentJobMatchItem(title: 'Junior Flutter Developer', matchPercent: 85),
         RecentJobMatchItem(title: 'Mobile Dev Intern', matchPercent: 72),
+        RecentJobMatchItem(title: 'Frontend Developer (Junior)', matchPercent: 70),
+        RecentJobMatchItem(title: 'Product Design Intern', matchPercent: 61),
+        RecentJobMatchItem(title: 'QA Tester (Entry)', matchPercent: 57),
       ],
       learningProgress: [
         LearningProgressItem(title: 'Dart & Flutter basics', progressPercent: 60),
         LearningProgressItem(title: 'Clean Architecture', progressPercent: 30),
+        LearningProgressItem(title: 'REST APIs & networking', progressPercent: 45),
+        LearningProgressItem(title: 'Testing in Flutter', progressPercent: 20),
+        LearningProgressItem(title: 'UI/UX for mobile', progressPercent: 55),
       ],
       notificationCount: 2,
     );

@@ -45,8 +45,12 @@ class _CandidateProfileByUserIdScreenState extends State<CandidateProfileByUserI
         _loading = false;
       });
     } catch (e) {
+      final raw = e.toString();
+      final friendly = raw.contains('(404)') || raw.toLowerCase().contains('candidate not found')
+          ? 'This candidate profile is not available yet. Use Talent Pool to open candidates with complete profiles.'
+          : raw;
       if (mounted) setState(() {
-        _error = e.toString();
+        _error = friendly;
         _loading = false;
       });
     }
@@ -73,7 +77,18 @@ class _CandidateProfileByUserIdScreenState extends State<CandidateProfileByUserI
                       children: [
                         Text(_error!, textAlign: TextAlign.center),
                         const SizedBox(height: AppSpacing.m),
-                        FilledButton(onPressed: _load, child: const Text('Retry')),
+                        Wrap(
+                          spacing: AppSpacing.s,
+                          runSpacing: AppSpacing.s,
+                          alignment: WrapAlignment.center,
+                          children: [
+                            FilledButton(onPressed: _load, child: const Text('Retry')),
+                            OutlinedButton(
+                              onPressed: () => context.pop(),
+                              child: const Text('Back'),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
                   ),

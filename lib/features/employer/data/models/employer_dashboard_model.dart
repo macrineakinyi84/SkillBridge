@@ -32,6 +32,33 @@ class EmployerDashboardModel extends Equatable {
     this.newMatchesNotification,
   });
 
+  factory EmployerDashboardModel.fromJson(Map<String, dynamic> json) {
+    final recent = (json['recentApplicants'] as List?)
+            ?.cast<Map>()
+            .map((m) => m.cast<String, dynamic>())
+            .map(
+              (m) => RecentApplicantItem(
+                applicationId: (m['applicationId'] as String?) ?? '',
+                jobId: (m['jobId'] as String?) ?? '',
+                jobTitle: (m['jobTitle'] as String?) ?? 'Job',
+                candidateName: (m['candidateName'] as String?) ?? 'Applicant',
+                skillMatchPercent: (m['skillMatchPercent'] as num?)?.toInt(),
+              ),
+            )
+            .where((e) => e.applicationId.isNotEmpty)
+            .toList() ??
+        const <RecentApplicantItem>[];
+
+    return EmployerDashboardModel(
+      activeListingsCount: (json['activeListingsCount'] as num?)?.toInt() ?? 0,
+      totalApplicantsCount: (json['totalApplicantsCount'] as num?)?.toInt() ?? 0,
+      newApplicantsThisWeek: (json['newApplicantsThisWeek'] as num?)?.toInt() ?? 0,
+      avgMatchScore: (json['avgMatchScore'] as num?)?.toDouble() ?? 0.0,
+      recentApplicants: recent,
+      newMatchesNotification: json['newMatchesNotification'] as String?,
+    );
+  }
+
   final int activeListingsCount;
   final int totalApplicantsCount;
   final int newApplicantsThisWeek;

@@ -59,7 +59,10 @@ class JobDetailPage extends StatelessWidget {
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.background,
       appBar: AppBar(
         title: const Text('Job details'),
-        leading: IconButton(icon: const Icon(Icons.arrow_back_rounded), onPressed: () => context.pop()),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded),
+          onPressed: () => context.canPop() ? context.pop() : context.go(router.AppRouter.jobBoard),
+        ),
         actions: [
           IconButton(icon: const Icon(Icons.bookmark_border_rounded), onPressed: () {}),
         ],

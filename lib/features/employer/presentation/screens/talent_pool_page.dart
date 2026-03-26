@@ -113,7 +113,14 @@ class _TalentPoolPageState extends State<TalentPoolPage> {
                       ..._items.map((item) => _CandidateTile(
                             item: item,
                             isDark: isDark,
-                            onTap: () => context.push('/employer/candidate/view/${item.id}'),
+                            onTap: () {
+                              final appId = item.applicationId;
+                              if (appId != null && appId.isNotEmpty) {
+                                context.push(router.AppRouter.employerCandidate(appId));
+                              } else {
+                                context.push('/employer/candidate/view/${item.id}');
+                              }
+                            },
                           )),
                     ],
                   ),

@@ -4,6 +4,7 @@ import 'package:equatable/equatable.dart';
 class TalentPoolSearchResult extends Equatable {
   const TalentPoolSearchResult({
     required this.id,
+    this.applicationId,
     this.displayName,
     this.county,
     this.photoUrl,
@@ -13,6 +14,9 @@ class TalentPoolSearchResult extends Equatable {
   });
 
   final String id;
+  /// Optional: if the candidate is coming from an application feed (mock/demo),
+  /// we can route to the application-based candidate profile screen.
+  final String? applicationId;
   final String? displayName;
   final String? county;
   final String? photoUrl;
@@ -21,5 +25,5 @@ class TalentPoolSearchResult extends Equatable {
   final int totalXp;
 
   @override
-  List<Object?> get props => [id, displayName, county, photoUrl, level, levelName, totalXp];
+  List<Object?> get props => [id, applicationId, displayName, county, photoUrl, level, levelName, totalXp];
 }

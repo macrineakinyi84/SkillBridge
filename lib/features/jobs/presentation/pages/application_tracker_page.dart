@@ -14,7 +14,10 @@ class ApplicationTrackerPage extends StatelessWidget {
       backgroundColor: Theme.of(context).brightness == Brightness.dark ? AppColors.backgroundDark : AppColors.background,
       appBar: AppBar(
         title: const Text('Application History'),
-        leading: IconButton(icon: const Icon(Icons.arrow_back_rounded), onPressed: () => context.pop()),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded),
+          onPressed: () => context.canPop() ? context.pop() : context.go(router.AppRouter.jobBoard),
+        ),
       ),
       body: EmptyState(
         icon: Icons.history_rounded,

@@ -3,6 +3,8 @@ import '../models/job_listing_model.dart';
 import '../models/application_model.dart';
 import '../models/candidate_model.dart';
 import '../models/talent_pool_search_result.dart';
+import '../../../../core/di/injection.dart';
+import '../../../../core/network/backend_api_client.dart';
 
 /// Employer API contract. Real impl will use ApiClient (GET/PATCH); see core/network/api_client.dart.
 /// Mock impl below returns in-memory data so UI works before backend is ready.
@@ -37,6 +39,103 @@ abstract class EmployerRemoteDataSource {
     int limit = 20,
     int offset = 0,
   });
+}
+
+class EmployerRemoteDataSourceBackend implements EmployerRemoteDataSource {
+  EmployerRemoteDataSourceBackend({BackendApiClient? api}) : _api = api ?? sl<BackendApiClient>();
+  final BackendApiClient _api;
+
+  @override
+  Future<EmployerDashboardModel> getDashboard(String employerId) async {
+    final res = await _api.get('/api/employer/dashboard');
+    final data = (res['data'] as Map?)?.cast<String, dynamic>() ?? {};
+    return EmployerDashboardModel.fromJson(data);
+  }
+
+  @override
+  Future<List<JobListingModel>> getListings(String employerId) async {
+    // Backend endpoint not implemented yet; keep mock responsibility in repository fallback.
+    throw UnimplementedError('Backend listings endpoint not available yet.');
+  }
+
+  @override
+  Future<void> patchApplicationStatus(String applicationId, String status) async {
+    // Not implemented in backend yet.
+    throw UnimplementedError('Backend patch application status not available yet.');
+  }
+
+  @override
+  Future<List<CandidateModel>> getCandidatesByJob(String jobId) async {
+    // Not implemented in backend yet.
+    throw UnimplementedError('Backend candidates-by-job not available yet.');
+  }
+
+  @override
+  Future<CandidateModel?> getCandidateByApplicationId(String applicationId) async {
+    // Not implemented in backend yet.
+    throw UnimplementedError('Backend candidate-by-application not available yet.');
+  }
+
+  @override
+  Future<JobListingModel?> createOrUpdateListing({
+    required String employerId,
+    String? listingId,
+    required String title,
+    required String description,
+    required List<String> requiredSkillIds,
+    required String county,
+    required String type,
+    required DateTime deadline,
+    bool remote = false,
+    int? salaryMin,
+    int? salaryMax,
+    List<String>? requirements,
+    Map<String, int>? skillIdToMinScore,
+  }) async {
+    // Not implemented in backend yet.
+    throw UnimplementedError('Backend create/update listing not available yet.');
+  }
+
+  @override
+  Future<int> getMatchingCandidateCount(Map<String, int> skillIdToMinScore) async {
+    // Not implemented in backend yet.
+    throw UnimplementedError('Backend matching count not available yet.');
+  }
+
+  @override
+  Future<({List<TalentPoolSearchResult> items, int total})> getTalentPoolSearch({
+    String? county,
+    String? categoryId,
+    String? q,
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    final query = <String, String>{
+      if (county != null && county.isNotEmpty) 'county': county,
+      if (categoryId != null && categoryId.isNotEmpty) 'categoryId': categoryId,
+      if (q != null && q.isNotEmpty) 'q': q,
+      'limit': '$limit',
+      'offset': '$offset',
+    };
+    final qs = query.entries.map((e) => '${Uri.encodeQueryComponent(e.key)}=${Uri.encodeQueryComponent(e.value)}').join('&');
+    final res = await _api.get('/api/employer/talent-pool?$qs');
+    final data = (res['data'] as Map?)?.cast<String, dynamic>() ?? {};
+    final itemsJson = (data['items'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    final total = (data['total'] as num?)?.toInt() ?? itemsJson.length;
+    final items = itemsJson
+        .map((m) => TalentPoolSearchResult(
+              id: (m['id'] as String?) ?? '',
+              displayName: m['displayName'] as String?,
+              county: m['county'] as String?,
+              photoUrl: m['photoUrl'] as String?,
+              level: (m['level'] as num?)?.toInt(),
+              levelName: m['levelName'] as String?,
+              totalXp: (m['totalXp'] as num?)?.toInt() ?? 0,
+            ))
+        .where((e) => e.id.isNotEmpty)
+        .toList();
+    return (items: items, total: total);
+  }
 }
 
 class EmployerRemoteDataSourceMock implements EmployerRemoteDataSource {
@@ -79,8 +178,8 @@ class EmployerRemoteDataSourceMock implements EmployerRemoteDataSource {
         id: 'app-1',
         jobId: 'job-1',
         candidateId: 'stu-1',
-        candidateName: 'Jane Doe',
-        candidateEmail: 'jane@example.com',
+        candidateName: 'Akinyi Ochieng',
+        candidateEmail: 'akinyi.ochieng@example.com',
         status: 'pending',
         skillMatchPercent: 78,
         appliedAt: now.subtract(const Duration(days: 1)),
@@ -89,8 +188,8 @@ class EmployerRemoteDataSourceMock implements EmployerRemoteDataSource {
         id: 'app-2',
         jobId: 'job-1',
         candidateId: 'stu-2',
-        candidateName: 'John Smith',
-        candidateEmail: 'john@example.com',
+        candidateName: 'Kiptoo Korir',
+        candidateEmail: 'kiptoo.korir@example.com',
         status: 'shortlisted',
         skillMatchPercent: 65,
         appliedAt: now.subtract(const Duration(days: 2)),
@@ -100,8 +199,8 @@ class EmployerRemoteDataSourceMock implements EmployerRemoteDataSource {
       CandidateModel(
         id: 'stu-1',
         applicationId: 'app-1',
-        displayName: 'Jane Doe',
-        email: 'jane@example.com',
+        displayName: 'Akinyi Ochieng',
+        email: 'akinyi.ochieng@example.com',
         skillMatchPercent: 78,
         categoryScores: {
           'digital-literacy': 85,
@@ -116,8 +215,8 @@ class EmployerRemoteDataSourceMock implements EmployerRemoteDataSource {
       CandidateModel(
         id: 'stu-2',
         applicationId: 'app-2',
-        displayName: 'John Smith',
-        email: 'john@example.com',
+        displayName: 'Kiptoo Korir',
+        email: 'kiptoo.korir@example.com',
         skillMatchPercent: 65,
         categoryScores: {
           'digital-literacy': 72,
@@ -309,6 +408,7 @@ class EmployerRemoteDataSourceMock implements EmployerRemoteDataSource {
     await Future.delayed(const Duration(milliseconds: 250));
     var items = _candidates.map((c) => TalentPoolSearchResult(
       id: c.id,
+      applicationId: c.applicationId,
       displayName: c.displayName,
       county: null,
       photoUrl: null,

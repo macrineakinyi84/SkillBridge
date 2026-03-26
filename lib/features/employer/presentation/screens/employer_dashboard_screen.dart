@@ -28,10 +28,18 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
   String? _error;
 
   String get _employerId => AuthScope.maybeOf(context)?.state.user?.id ?? '';
+  bool _didLoad = false;
 
   @override
   void initState() {
     super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_didLoad) return;
+    _didLoad = true;
     _load();
   }
 

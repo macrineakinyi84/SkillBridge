@@ -1,15 +1,15 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'token_storage.dart';
 
 class BackendSession {
-  BackendSession({FlutterSecureStorage? storage})
-      : _storage = storage ?? const FlutterSecureStorage();
+  BackendSession({TokenStorage? storage})
+      : _storage = storage ?? createTokenStorage();
 
   static const _tokenKey = 'skillbridge.jwt';
 
-  final FlutterSecureStorage _storage;
+  final TokenStorage _storage;
   final StreamController<BackendSessionState> _controller =
       StreamController<BackendSessionState>.broadcast();
 
@@ -18,7 +18,7 @@ class BackendSession {
   Stream<BackendSessionState> get changes => _controller.stream;
 
   Future<void> restore() async {
-    final token = await _storage.read(key: _tokenKey);
+    final token = await _storage.read(_tokenKey);
     if (token == null || token.isEmpty) {
       _emit(const BackendSessionState());
       return;
@@ -27,12 +27,12 @@ class BackendSession {
   }
 
   Future<void> setToken(String token) async {
-    await _storage.write(key: _tokenKey, value: token);
+    await _storage.write(_tokenKey, token);
     _emit(BackendSessionState(token: token, claims: _decodeClaims(token)));
   }
 
   Future<void> clear() async {
-    await _storage.delete(key: _tokenKey);
+    await _storage.delete(_tokenKey);
     _emit(const BackendSessionState());
   }
 

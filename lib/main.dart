@@ -4,6 +4,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'firebase_options.dart';
 import 'core/di/injection.dart';
 import 'core/router/app_router.dart';
+import 'core/storage/hive_init.dart';
+import 'core/seed/seed_service.dart';
 import 'shared/theme/app_theme.dart';
 import 'shared/widgets/auth_scope.dart';
 import 'features/auth/presentation/state/auth_notifier.dart';
@@ -15,8 +17,10 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // Load env from assets (use .env when present for local secrets; see README).
   await dotenv.load(fileName: 'assets/env.example');
+  await HiveInit.ensureInitialized();
   final firebaseReady = await _initFirebase();
   await setupServiceLocator(useFirebase: firebaseReady);
+  await sl<SeedService>().seedIfNeeded();
   await _restoreBackendSession();
   runApp(const SkillBridgeApp());
 }
