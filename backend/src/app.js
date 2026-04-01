@@ -16,6 +16,10 @@ const authLimiter = rateLimit({
 function createApp() {
   const app = express();
 
+  // Trust Railway's load balancer so express-rate-limit can read the real
+  // client IP from the X-Forwarded-For header instead of the proxy's IP.
+  app.set('trust proxy', 1);
+
   app.use(cors());
   app.use(express.json({ limit: '1mb' }));
   app.use('/api/auth', authLimiter);
