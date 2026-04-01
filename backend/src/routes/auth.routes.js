@@ -25,8 +25,9 @@ router.post('/request-otp', asyncHandler(async (req, res) => {
   const { email, role } = req.body || {};
   const { user, otp, expiresAt } = await authService.requestEmailOtp(email, role);
 
-  // In production you'd email/sms the OTP; never return it to clients.
-  const includeOtp = process.env.NODE_ENV !== 'production';
+  // For this project we always include the OTP in the JSON response
+  // so that it can be viewed from dev tools even in deployed environments.
+  const includeOtp = true;
   return res.json({
     success: true,
     data: {
