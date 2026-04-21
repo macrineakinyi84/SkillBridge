@@ -17,6 +17,8 @@ function createApp() {
   const app = express();
 
   app.use(cors());
+  // Stripe webhook requires the raw body for signature verification.
+  app.use('/api/billing/webhook', express.raw({ type: 'application/json' }));
   app.use(express.json({ limit: '1mb' }));
   app.use('/api/auth', authLimiter);
 

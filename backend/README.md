@@ -62,6 +62,28 @@ curl -H "Authorization: Bearer VALID_JWT" https://yourapi.com/api/users
 
 - **Auth routes** (`/api/auth/*`): limited to 30 requests per 15 minutes per IP to reduce OTP abuse and brute force. Configure in `src/app.js` (`authLimiter`).
 
+## Billing + AI endpoints
+
+- **Stripe billing**:
+  - `POST /api/billing/create-checkout-session` (employer auth required) returns a Stripe Checkout URL.
+  - `GET /api/billing/status` (employer auth required) returns `{ plan, status, canPostJobs }`.
+  - `POST /api/billing/webhook` handles Stripe subscription lifecycle events.
+- **Duplicate-application AI check**:
+  - `POST /api/ai/duplicate-application-check` (auth required) accepts `{ jobId, applicationText }`.
+  - Uses OpenAI embeddings when `OPENAI_API_KEY` is set; falls back to exact text duplicate checks.
+
+Required env vars for this flow:
+
+```bash
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_PRICE_ID=price_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+APP_BASE_URL=https://skillbridge-bc0e5.web.app
+OPENAI_API_KEY=sk-... # optional for semantic matching
+OPENAI_EMBEDDING_MODEL=text-embedding-3-small
+DUPLICATE_SIMILARITY_THRESHOLD=0.92
+```
+
 ## Testing
 
 System and unit tests live in `__tests__/`. Run the full suite:

@@ -32,11 +32,17 @@ model User {
   learnStreak Int    @default(0)
   lastJobStreakAt  DateTime?
   lastLearnStreakAt DateTime?
+  subscriptionPlan String @default("free")
+  subscriptionStatus String @default("inactive")
+  stripeCustomerId String?
+  stripeSubscriptionId String?
+  subscriptionCurrentPeriodEnd DateTime?
 
   skillScores SkillScore[]
   assessments Assessment[]
   xpEvents    XpEvent[]
   userBadges  UserBadge[]
+  applicationIntents ApplicationIntent[]
 }
 
 model OtpToken {
@@ -95,4 +101,16 @@ model UserBadge {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@unique([userId, badgeId])
   @@index([userId])
+}
+
+model ApplicationIntent {
+  id        String   @id @default(uuid())
+  userId    String
+  jobExternalId String
+  content   String
+  embedding Json?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, jobExternalId])
 }

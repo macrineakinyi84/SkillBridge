@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/di/injection.dart';
+import '../../../../core/network/backend_api_client.dart';
 import '../../../../core/router/app_router.dart' as router;
 import '../../../../shared/theme/app_colors.dart';
 import '../../../../shared/theme/app_radius.dart';
@@ -24,8 +26,12 @@ class PostJobScreen extends StatefulWidget {
 
 class _PostJobScreenState extends State<PostJobScreen> {
   final EmployerRepository _repo = sl<EmployerRepository>();
+  final BackendApiClient _api = sl<BackendApiClient>();
   int _step = 0;
   bool _saving = false;
+  bool _billingLoading = true;
+  bool _canPostJobs = false;
+  String _plan = 'free';
   JobListingModel? _editListing;
 
   final _titleController = TextEditingController();
@@ -63,6 +69,40 @@ class _PostJobScreenState extends State<PostJobScreen> {
     }
     if (widget.editListingId != null) _loadForEdit();
     _refreshMatchCount();
+    _loadBillingStatus();
+  }
+
+  Future<void> _loadBillingStatus() async {
+    try {
+      final res = await _api.get('/api/billing/status');
+      final data = (res['data'] as Map?)?.cast<String, dynamic>() ?? {};
+      if (!mounted) return;
+      setState(() {
+        _plan = (data['plan'] as String?) ?? 'free';
+        _canPostJobs = (data['canPostJobs'] as bool?) ?? false;
+        _billingLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _plan = 'free';
+        _canPostJobs = false;
+        _billingLoading = false;
+      });
+    }
+  }
+
+  Future<void> _startCheckout() async {
+    try {
+      final res = await _api.post('/api/billing/create-checkout-session', {});
+      final data = (res['data'] as Map?)?.cast<String, dynamic>() ?? {};
+      final url = data['url'] as String?;
+      if (url == null || url.isEmpty) throw Exception('Checkout URL missing');
+      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Unable to start checkout: $e')));
+    }
   }
 
   Future<void> _loadForEdit() async {
@@ -196,7 +236,42 @@ class _PostJobScreenState extends State<PostJobScreen> {
           ),
         ),
       ),
-      body: ListView(
+      body: _billingLoading
+          ? const Center(child: CircularProgressIndicator())
+          : !_canPostJobs
+              ? ListView(
+                  padding: const EdgeInsets.all(AppSpacing.m),
+                  children: [
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpacing.m),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Upgrade required', style: AppTypography.h3(context, isDark: isDark)),
+                            const SizedBox(height: AppSpacing.s),
+                            Text(
+                              'Your current plan is ${_plan.toUpperCase()}. Upgrade to Pro to post job listings.',
+                              style: AppTypography.body(context, isDark: isDark),
+                            ),
+                            const SizedBox(height: AppSpacing.m),
+                            FilledButton.icon(
+                              onPressed: _startCheckout,
+                              icon: const Icon(Icons.workspace_premium_rounded),
+                              label: const Text('Upgrade to Pro'),
+                            ),
+                            const SizedBox(height: AppSpacing.s),
+                            TextButton(
+                              onPressed: _loadBillingStatus,
+                              child: const Text('I have already paid, refresh status'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              : ListView(
         padding: const EdgeInsets.all(AppSpacing.m),
         children: [
           if (_step == 0) _buildStep1(isDark),
