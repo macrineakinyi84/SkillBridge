@@ -16,6 +16,10 @@ const authLimiter = rateLimit({
 function createApp() {
   const app = express();
 
+  // Trust Railway's load balancer so express-rate-limit can read the real
+  // client IP from the X-Forwarded-For header instead of the proxy's IP.
+  app.set('trust proxy', 1);
+
   app.use(cors());
   // Stripe webhook requires the raw body for signature verification.
   app.use('/api/billing/webhook', express.raw({ type: 'application/json' }));
