@@ -65,7 +65,7 @@ curl -H "Authorization: Bearer VALID_JWT" https://yourapi.com/api/users
 ## Billing + AI endpoints
 
 - **Stripe billing**:
-  - `POST /api/billing/create-checkout-session` (employer auth required) returns a Stripe Checkout URL.
+  - `POST /api/billing/create-checkout-session` (employer auth required) accepts `{ plan }` where plan is `growth` or `enterprise`, then returns a Stripe Checkout URL.
   - `GET /api/billing/status` (employer auth required) returns `{ plan, status, canPostJobs }`.
   - `POST /api/billing/webhook` handles Stripe subscription lifecycle events.
 - **Duplicate-application AI check**:
@@ -76,7 +76,8 @@ Required env vars for this flow:
 
 ```bash
 STRIPE_SECRET_KEY=sk_test_...
-STRIPE_PRICE_ID=price_...
+STRIPE_PRICE_ID_GROWTH=price_...
+STRIPE_PRICE_ID_ENTERPRISE=price_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 APP_BASE_URL=https://skillbridge-bc0e5.web.app
 OPENAI_API_KEY=sk-... # optional for semantic matching

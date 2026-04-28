@@ -10,6 +10,10 @@ validateRequiredEnv(['JWT_SECRET']);
 const port = Number(process.env.PORT || 4000);
 const app = createApp();
 
+// Behind Railway's proxy/load balancer we need this so express-rate-limit
+// can safely read X-Forwarded-For instead of throwing a validation error.
+app.set('trust proxy', 1);
+
 app.listen(port, () => {
   // eslint-disable-next-line no-console
   console.log(`SkillBridge API listening on http://localhost:${port}`);

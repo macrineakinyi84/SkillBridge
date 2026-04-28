@@ -1,1 +1,29 @@
-{"flutter":{"platforms":{"dart":{"lib/firebase_options.dart":{"projectId":"skillbridge-bc0e5","configurations":{"macos":"1:256604439774:ios:779305d6b6e2494823ae4f","windows":"1:256604439774:web:f2978ab8e2d6da5823ae4f"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "skillbridge-bc0e5",
+          "configurations": {
+            "macos": "1:256604439774:ios:779305d6b6e2494823ae4f",
+            "windows": "1:256604439774:web:f2978ab8e2d6da5823ae4f"
+          }
+        }
+      }
+    }
+  },
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}

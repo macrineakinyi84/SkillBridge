@@ -1,9 +1,9 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/di/injection.dart';
+import '../../../../core/router/app_router.dart' as router;
 import '../../../../shared/theme/app_colors.dart';
 import '../../../../shared/theme/app_radius.dart';
 import '../../../../shared/theme/app_spacing.dart';
@@ -256,8 +256,16 @@ class _CandidateProfileScreenState extends State<CandidateProfileScreen> {
   }
 
   Future<void> _openFullPortfolio() async {
-    final uri = Uri.parse('https://skillupkenya.com/u/${_candidate?.id ?? "profile"}');
-    if (await canLaunchUrl(uri)) await launchUrl(uri, mode: LaunchMode.externalApplication);
+    final c = _candidate;
+    if (c == null) return;
+    context.push(
+      router.AppRouter.employerCandidatePortfolio(c.id),
+      extra: {
+        'displayName': c.displayName,
+        'email': c.email,
+        'summary': c.portfolioSummary,
+      },
+    );
   }
 
   Widget _buildActions(bool isDark) {

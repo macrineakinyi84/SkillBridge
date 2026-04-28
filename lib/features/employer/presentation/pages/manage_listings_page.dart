@@ -88,7 +88,7 @@ class _ManageListingsPageState extends State<ManageListingsPage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.add_rounded),
-            onPressed: () => context.push(router.AppRouter.employerPostJob),
+            onPressed: () => context.go(router.AppRouter.employerPostJob),
           ),
         ],
       ),
@@ -123,7 +123,7 @@ class _ManageListingsPageState extends State<ManageListingsPage> {
         headline: 'No job listings yet',
         body: 'Post your first job to start receiving applications.',
         actionLabel: 'Post job',
-        onAction: () => context.push(router.AppRouter.employerPostJob),
+        onAction: () => context.go(router.AppRouter.employerPostJob),
         icon: Icons.work_rounded,
       );
     }

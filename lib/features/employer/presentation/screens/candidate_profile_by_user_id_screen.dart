@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/network/backend_api_client.dart';
@@ -128,7 +129,16 @@ class _CandidateProfileByUserIdScreenState extends State<CandidateProfileByUserI
           const SizedBox(height: AppSpacing.xl),
           if (email != null && email.isNotEmpty)
             FilledButton.icon(
-              onPressed: () {},
+              onPressed: () async {
+                final uri = Uri(
+                  scheme: 'mailto',
+                  path: email,
+                  query: Uri.encodeQueryComponent('subject=Opportunity from SkillBridge&body=Hi $name,%0D%0A%0D%0AI saw your SkillBridge profile and would like to connect about an opportunity.'),
+                );
+                if (await canLaunchUrl(uri)) {
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                }
+              },
               icon: const Icon(Icons.email_rounded, size: 20),
               label: const Text('Contact'),
             ),

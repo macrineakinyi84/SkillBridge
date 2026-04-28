@@ -36,6 +36,7 @@ import '../../features/employer/presentation/screens/post_job_screen.dart';
 import '../../features/employer/presentation/screens/talent_pipeline_screen.dart';
 import '../../features/employer/presentation/screens/candidate_profile_screen.dart';
 import '../../features/employer/presentation/screens/candidate_profile_by_user_id_screen.dart';
+import '../../features/employer/presentation/screens/candidate_full_portfolio_screen.dart';
 import '../../features/employer/presentation/screens/talent_pool_page.dart';
 import '../../features/assessment/presentation/screens/assessment_list_screen.dart';
 import '../../features/assessment/presentation/screens/assessment_quiz_screen.dart';
@@ -71,12 +72,13 @@ class AppRouter {
   // Employer (S-020–S-025)
   static const String employerDashboard = '/employer/dashboard';
   static const String employerListings = '/employer/listings';
-  static const String employerPostJob = '/employer/post-job';
+  static const String employerPostJob = '/employer/listings/post-job';
   static String employerPostJobEdit(String id) => '/employer/listings/edit/$id';
   static const String employerCandidatesPath = '/employer/candidates';
   static String employerCandidates(String jobId) => '/employer/candidates/$jobId';
   static const String employerCandidatePath = '/employer/candidate';
   static String employerCandidate(String applicationId) => '/employer/candidate/$applicationId';
+  static String employerCandidatePortfolio(String userId) => '/employer/candidate-portfolio/$userId';
 
   static const String assessmentList = '/assessment';
   static const String assessmentQuiz = '/assessment/quiz';
@@ -160,6 +162,10 @@ class AppRouter {
                   builder: (_, __) => const ManageListingsPage(),
                   routes: [
                     GoRoute(
+                      path: 'post-job',
+                      builder: (_, __) => const PostJobScreen(),
+                    ),
+                    GoRoute(
                       path: 'edit/:id',
                       builder: (_, state) => PostJobScreen(editListingId: state.pathParameters['id']),
                     ),
@@ -171,9 +177,10 @@ class AppRouter {
             StatefulShellBranch(routes: [GoRoute(path: '/employer/profile', builder: (_, __) => const ProfilePage())]),
           ],
         ),
+        // Backward-compatible direct path in case of old deep links.
         GoRoute(
           path: '/employer/post-job',
-          builder: (_, __) => const PostJobScreen(),
+          redirect: (_, __) => employerPostJob,
         ),
         GoRoute(
           path: '/employer/candidates/:jobId',
@@ -186,6 +193,18 @@ class AppRouter {
         GoRoute(
           path: '/employer/candidate/view/:userId',
           builder: (_, state) => CandidateProfileByUserIdScreen(userId: state.pathParameters['userId']!),
+        ),
+        GoRoute(
+          path: '/employer/candidate-portfolio/:userId',
+          builder: (_, state) {
+            final extra = state.extra as Map<String, dynamic>?;
+            return CandidateFullPortfolioScreen(
+              userId: state.pathParameters['userId']!,
+              displayName: extra?['displayName'] as String?,
+              email: extra?['email'] as String?,
+              summary: extra?['summary'] as String?,
+            );
+          },
         ),
         GoRoute(path: assessmentList, builder: (_, __) => const AssessmentListScreen()),
         GoRoute(

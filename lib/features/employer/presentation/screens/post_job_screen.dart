@@ -31,8 +31,12 @@ class _PostJobScreenState extends State<PostJobScreen> {
   bool _saving = false;
   bool _billingLoading = true;
   bool _canPostJobs = false;
+  /// Lets presenters open the full post-job flow after "refresh status" without Stripe.
+  bool _presentationUnlock = false;
   String _plan = 'free';
   JobListingModel? _editListing;
+
+  bool get _canShowPostJobFlow => _canPostJobs || _presentationUnlock;
 
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -92,9 +96,24 @@ class _PostJobScreenState extends State<PostJobScreen> {
     }
   }
 
-  Future<void> _startCheckout() async {
+  Future<void> _onRefreshStatusForPresentation() async {
+    if (!mounted) return;
+    // Unlock immediately so the job form appears even if billing/status is slow or fails (demo).
+    setState(() {
+      _presentationUnlock = true;
+      _billingLoading = false;
+    });
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Posting unlocked for this session (presentation mode).')),
+      );
+    }
+    await _loadBillingStatus();
+  }
+
+  Future<void> _startCheckout(String plan) async {
     try {
-      final res = await _api.post('/api/billing/create-checkout-session', {});
+      final res = await _api.post('/api/billing/create-checkout-session', {'plan': plan});
       final data = (res['data'] as Map?)?.cast<String, dynamic>() ?? {};
       final url = data['url'] as String?;
       if (url == null || url.isEmpty) throw Exception('Checkout URL missing');
@@ -238,7 +257,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
       ),
       body: _billingLoading
           ? const Center(child: CircularProgressIndicator())
-          : !_canPostJobs
+          : !_canShowPostJobFlow
               ? ListView(
                   padding: const EdgeInsets.all(AppSpacing.m),
                   children: [
@@ -248,22 +267,33 @@ class _PostJobScreenState extends State<PostJobScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Upgrade required', style: AppTypography.h3(context, isDark: isDark)),
+                            Text('Upgrade required', style: AppTypography.h2(context, isDark: isDark)),
                             const SizedBox(height: AppSpacing.s),
                             Text(
-                              'Your current plan is ${_plan.toUpperCase()}. Upgrade to Pro to post job listings.',
+                              'Your current plan is ${_plan.toUpperCase()}. Choose a paid plan to post job listings.',
                               style: AppTypography.body(context, isDark: isDark),
                             ),
                             const SizedBox(height: AppSpacing.m),
                             FilledButton.icon(
-                              onPressed: _startCheckout,
+                              onPressed: () => _startCheckout('growth'),
                               icon: const Icon(Icons.workspace_premium_rounded),
-                              label: const Text('Upgrade to Pro'),
+                              label: const Text('Upgrade to Growth'),
+                            ),
+                            const SizedBox(height: AppSpacing.s),
+                            OutlinedButton.icon(
+                              onPressed: () => _startCheckout('enterprise'),
+                              icon: const Icon(Icons.business_center_rounded),
+                              label: const Text('Upgrade to Enterprise'),
                             ),
                             const SizedBox(height: AppSpacing.s),
                             TextButton(
-                              onPressed: _loadBillingStatus,
-                              child: const Text('I have already paid, refresh status'),
+                              onPressed: _onRefreshStatusForPresentation,
+                              child: const Text('I have already paid — show job form'),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Opens the full Post job steps for your presentation; billing status still refreshes in the background.',
+                              style: AppTypography.caption(context, isDark: isDark),
                             ),
                           ],
                         ),
@@ -274,6 +304,29 @@ class _PostJobScreenState extends State<PostJobScreen> {
               : ListView(
         padding: const EdgeInsets.all(AppSpacing.m),
         children: [
+          if (_presentationUnlock && !_canPostJobs)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.m),
+              child: Material(
+                color: AppColors.primary.withOpacity(0.12),
+                borderRadius: AppRadius.radiusL,
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.m),
+                  child: Row(
+                    children: [
+                      Icon(Icons.present_to_all_rounded, color: AppColors.primary, size: 22),
+                      const SizedBox(width: AppSpacing.s),
+                      Expanded(
+                        child: Text(
+                          'Presentation mode: you can complete Post job without a live subscription.',
+                          style: AppTypography.caption(context, isDark: isDark),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           if (_step == 0) _buildStep1(isDark),
           if (_step == 1) _buildStep2(isDark),
           if (_step == 2) _buildStep3(isDark),

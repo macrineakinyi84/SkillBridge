@@ -12,14 +12,31 @@ function stripeClient() {
   return new Stripe(getStripeSecretKey());
 }
 
+const ALLOWED_PLANS = new Set(['growth', 'enterprise']);
+
+function getPriceIdForPlan(plan) {
+  if (plan === 'growth') return getEnv('STRIPE_PRICE_ID_GROWTH');
+  if (plan === 'enterprise') return getEnv('STRIPE_PRICE_ID_ENTERPRISE');
+  return null;
+}
+
 router.post('/create-checkout-session', authenticate, requireEmployer, asyncHandler(async (req, res) => {
   const userId = req.user.userId;
   const user = await prisma?.user.findUnique({ where: { id: userId } });
   if (!user) return res.status(404).json({ success: false, error: { message: 'Employer not found' } });
 
-  const priceId = getEnv('STRIPE_PRICE_ID');
+  const selectedPlan = String(req.body?.plan ?? 'growth').toLowerCase();
+  if (!ALLOWED_PLANS.has(selectedPlan)) {
+    return res.status(400).json({ success: false, error: { message: 'Unsupported plan. Use growth or enterprise.' } });
+  }
+  const priceId = getPriceIdForPlan(selectedPlan);
   const appBase = getEnv('APP_BASE_URL', 'http://localhost:3000');
-  if (!priceId) return res.status(400).json({ success: false, error: { message: 'STRIPE_PRICE_ID missing' } });
+  if (!priceId) {
+    return res.status(400).json({
+      success: false,
+      error: { message: `Missing Stripe price ID for ${selectedPlan}. Set STRIPE_PRICE_ID_${selectedPlan.toUpperCase()}` },
+    });
+  }
 
   const stripe = stripeClient();
   const customer = user.stripeCustomerId
@@ -41,7 +58,7 @@ router.post('/create-checkout-session', authenticate, requireEmployer, asyncHand
     line_items: [{ price: priceId, quantity: 1 }],
     success_url: `${appBase}/employer/dashboard?billing=success`,
     cancel_url: `${appBase}/employer/dashboard?billing=cancelled`,
-    metadata: { userId },
+    metadata: { userId, plan: selectedPlan },
   });
 
   return res.json({ success: true, data: { url: session.url } });
@@ -79,11 +96,12 @@ router.post('/webhook', asyncHandler(async (req, res) => {
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
     const userId = session.metadata?.userId;
+    const selectedPlan = session.metadata?.plan;
     if (userId) {
       await prisma?.user.update({
         where: { id: userId },
         data: {
-          subscriptionPlan: 'pro',
+          subscriptionPlan: (selectedPlan === 'enterprise' || selectedPlan === 'growth') ? selectedPlan : 'growth',
           subscriptionStatus: 'active',
           stripeSubscriptionId: session.subscription ?? null,
         },

@@ -15,7 +15,16 @@ class EmployerRemoteDataSourceHybrid implements EmployerRemoteDataSource {
   @override
   Future<EmployerDashboardModel> getDashboard(String employerId) async {
     try {
-      return await backend.getDashboard(employerId);
+      final live = await backend.getDashboard(employerId);
+      final isEmpty =
+          live.activeListingsCount == 0 &&
+          live.totalApplicantsCount == 0 &&
+          live.newApplicantsThisWeek == 0 &&
+          live.recentApplicants.isEmpty;
+      if (isEmpty) {
+        return await fallback.getDashboard(employerId);
+      }
+      return live;
     } catch (_) {
       return await fallback.getDashboard(employerId);
     }

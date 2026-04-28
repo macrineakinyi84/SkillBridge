@@ -40,3 +40,8 @@ ios/**/GoogleService-Info.plist
 *.freezed.dart
 
 flutter/
+.firebase/
+.firebaserc
+performance/
+private-notes/
+docs/test-evidence-*.txt

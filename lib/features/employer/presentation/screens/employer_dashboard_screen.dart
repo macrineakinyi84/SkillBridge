@@ -95,7 +95,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
         child: _buildBody(isDark),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push(router.AppRouter.employerPostJob),
+        onPressed: () => context.go(router.AppRouter.employerPostJob),
         icon: const Icon(Icons.add_rounded),
         label: const Text('Post New Job'),
         backgroundColor: AppColors.primary,
@@ -139,7 +139,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
         SizedBox(
           width: double.infinity,
           child: FilledButton.icon(
-            onPressed: () => context.push(router.AppRouter.employerPostJob),
+            onPressed: () => context.go(router.AppRouter.employerPostJob),
             icon: const Icon(Icons.add_rounded),
             label: const Text('Post New Job'),
             style: FilledButton.styleFrom(
