@@ -1,4 +1,4 @@
-# SkillBridge (SkillUp Kenya)
+# SkillBridge Kenya
 
 **Bridge your skills to career readiness.** A final-year academic project aligning with SDG 8 (Decent Work and Economic Growth) and SDG 4 (Quality Education) by helping youth and job-seekers in Kenya assess skills, build portfolios, and connect with opportunities.
 
